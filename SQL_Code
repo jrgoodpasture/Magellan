@@ -1,0 +1,139 @@
+DROP DATABASE TRAVELDB;
+CREATE DATABASE TRAVELDB;
+USE TRAVELDB;
+CREATE TABLE COUNTRY 
+(
+Country_Name 		VARCHAR(30)		NOT NULL,
+Population			INT				NOT NULL,
+PRIMARY KEY (Country_Name),
+CONSTRAINT Population_Check CHECK (Population >= 0)
+);
+
+CREATE TABLE COUNTRY_LANGUAGE
+(
+Lang_Name			VARCHAR(30)		NOT NULL,
+Country_Name		VARCHAR(30)		NOT NULL,
+PRIMARY KEY (Lang_Name, Country_Name),
+FOREIGN KEY (Country_Name) REFERENCES COUNTRY (Country_Name),
+CONSTRAINT Country_Language_Check CHECK ( Lang_Name IN ('English', 'Spanish', 'Catalan', 'German', 'Italian', 'French', 'Flemish', 'Dutch', 'Greek', 'Valencian', 'Galician', 'Basque', 'Gaelic', 'Portuguese'))
+);
+
+CREATE TABLE CITY
+(
+ Country_Name		VARCHAR(30)		NOT NULL,
+ City_Name			VARCHAR(30)		NOT NULL,
+ Longitude			DECIMAL(9,6)		NOT NULL,
+ Latitude			DECIMAL(9,6)		NOT NULL,
+ PRIMARY KEY (Country_Name, City_Name),
+ UNIQUE (Longitude, Latitude),
+ FOREIGN KEY (Country_Name) REFERENCES COUNTRY (Country_Name),
+ CONSTRAINT GPS_Check CHECK ( Latitude >= -90 AND Latitude <= 90 AND Longitude >= -180 AND Longitude <= 180)
+);
+
+CREATE TABLE CAPITAL
+(
+ Country_Name		VARCHAR(30)		NOT NULL,
+ City_Name			VARCHAR(30)		NOT NULL,
+ PRIMARY KEY (Country_Name, City_Name),
+ FOREIGN KEY (Country_Name, City_Name) REFERENCES CITY (Country_Name, City_Name)
+);
+
+CREATE TABLE CITY_LANGUAGE
+(
+ Lang_Name			VARCHAR(30)		NOT NULL,
+ Country_Name		VARCHAR(30)		NOT NULL,
+ City_Name			VARCHAR(30)		NOT NULL,
+ PRIMARY KEY (Lang_Name, Country_Name, City_Name),
+ FOREIGN KEY (Country_Name, City_Name) REFERENCES City (Country_Name, City_Name),
+CONSTRAINT City_Language_Check CHECK ( Lang_Name IN ('English', 'Spanish', 'Catalan', 'German', 'Italian', 'French', 'Flemish', 'Dutch', 'Greek', 'Valencian', 'Galician', 'Basque', 'Gaelic', 'Portuguese'))
+);
+
+CREATE TABLE LOCATION 
+(
+ Country_Name		VARCHAR(30)		NOT NULL,
+ City_Name			VARCHAR(30)		NOT NULL,
+ Address			VARCHAR(35)		NOT NULL,
+ Loc_Name			VARCHAR(30)		NOT NULL,
+ Cost				INT				NOT NULL,
+ Loc_Type				VARCHAR(10)		NOT NULL,
+ STD_Discount		INT				NOT NULL,
+ PRIMARY KEY (Country_Name, City_Name, Address),
+ FOREIGN KEY (Country_Name, City_Name) REFERENCES CITY (Country_Name, City_Name),
+CONSTRAINT Location_Check CHECK ( Loc_Type IN ('Museum', 'Stadium', 'Restaurant', 'Plaza', 'Park', 'Memorial', 'Church'))
+);
+
+CREATE TABLE EVENT 
+(
+ Country_Name		VARCHAR(30)		NOT NULL,
+ City_Name			VARCHAR(30)		NOT NULL,
+ Address			VARCHAR(35)		NOT NULL,
+ Event_Name			VARCHAR(12)		NOT NULL,
+ Event_Date			DATE				NOT NULL,
+ Start_Time			TIME				NOT NULL,
+ Cost				DECIMAL(6,2)			NOT NULL,
+ End_Time			TIME,
+ STD_Discount		INT				NOT NULL,
+ Description			VARCHAR(1000)		NOT NULL,
+ Category			VARCHAR(12)		NOT NULL,
+ PRIMARY KEY (Country_Name, City_Name, Address, Event_Name, Event_Date, Start_Time),
+ FOREIGN KEY (Country_Name, City_Name, Address) REFERENCES LOCATION (Country_Name, City_Name, Address),
+CONSTRAINT Event_Check CHECK ( Category IN ('Concert', 'Sports Match', 'Race', 'Festival', 'Presentation')),
+CONSTRAINT Cost_Check CHECK (Cost >= 0 and STD_Discount >= 0)
+ );
+
+CREATE TABLE USER
+(
+ Username			VARCHAR(15)		NOT NULL,
+ Email				VARCHAR(50)		NOT NULL,
+ Password			VARCHAR(30)		NOT NULL,
+ isManager			BOOLEAN			NOT NULL,
+ PRIMARY KEY (Username),
+ UNIQUE (Email) 
+);
+
+CREATE TABLE CITY_REVIEW
+(
+ Username			VARCHAR(30)		NOT NULL,
+ Date_Written			DATE				NOT NULL,
+ City_Name			VARCHAR(30)		NOT NULL,
+ Country_Name		VARCHAR(30)		NOT NULL,
+ Score				INT				NOT NULL,
+ Description			VARCHAR(1000)		NOT NULL,
+ PRIMARY KEY (Username, Date_Written, Country_Name, City_Name),
+ FOREIGN KEY (Country_Name, City_Name) REFERENCES CITY (Country_Name,    City_Name),
+ FOREIGN KEY (Username) REFERENCES USER (Username),
+ CONSTRAINT Score_Check CHECK (Score >= 1 AND Score <= 5)
+ );
+
+CREATE TABLE LOCATION_REVIEW
+(
+ Username			VARCHAR(15)		NOT NULL,
+ Date_Written 			DATE				NOT NULL,
+ Address			VARCHAR(100)		NOT NULL,
+ Country_Name		VARCHAR(30)		NOT NULL,
+ City_Name			VARCHAR(30)		NOT NULL,
+ Score				INT				NOT NULL,
+ Description			VARCHAR(1000)		NOT NULL,
+ PRIMARY KEY (Username, Date_Written, Country_Name, City_Name, Address),
+ FOREIGN KEY (Country_Name, City_Name, Address) REFERENCES      LOCATION(Country_Name, City_Name, Address),
+ FOREIGN KEY (Username) REFERENCES USER (Username),
+ CONSTRAINT Score_Check CHECK (Score >= 1 AND Score <= 5)
+);
+
+CREATE TABLE EVENT_REVIEW
+(
+ Username			VARCHAR(15)		NOT NULL,
+ Date_Written 			DATE				NOT NULL,
+ Address			VARCHAR(100)		NOT NULL,
+ Country_Name		VARCHAR(30)		NOT NULL,
+ City_Name			VARCHAR(30)		NOT NULL,
+ Event_Name			VARCHAR(30)		NOT NULL,
+ Event_Date			DATE				NOT NULL,
+ Start_Time			TIME				NOT NULL,
+ Score				INT				NOT NULL,
+ Description			VARCHAR(1000)		NOT NULL,
+ PRIMARY KEY (Username, Date_Written, Country_Name, City_Name, Address,  Event_Name, Event_Date, Start_Time),
+ FOREIGN KEY (Country_Name, City_Name, Address, Event_Name, Event_Date, Start_Time) REFERENCES EVENT (Country_Name, City_Name, Address, Event_Name, Event_Date, Start_Time),
+ FOREIGN KEY (Username) REFERENCES USER (Username),
+ CONSTRAINT Score_Check CHECK (Score >= 1 AND Score <= 5)
+);
